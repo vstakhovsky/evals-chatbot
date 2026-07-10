@@ -1,0 +1,24 @@
+# Serge GitHub-native AI code review
+# TODO: This workflow requires SERGE_API_KEY secret to be set in repo settings
+# https://github.com/huggingface/serge
+# For now, this is a placeholder - uncomment and configure when ready
+
+# name: Serge Review
+# on:
+#   pull_request:
+#     types: [opened, synchronize, reopened]
+#
+# jobs:
+#   serge-review:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+#
+#       - name: Run Serge Review
+#         uses: huggingface/serge-action@main
+#         with:
+#           api_key: ${{ secrets.SERGE_API_KEY }}
+#           model: gpt-4
+#           max_tokens: 2000
