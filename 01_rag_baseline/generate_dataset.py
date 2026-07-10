@@ -139,7 +139,7 @@ Modifier:
 """
 
 # Generation settings
-MAX_ROWS = None  # Set to a small int (e.g., 25) for testing, None for full dataset
+MAX_ROWS = None  # Full dataset: 5 personas × 6 scenarios × 5 modifiers = 150
 SEM_CONCURRENCY = 8
 SAVE_EVERY = 25
 OUTPUT_PATH = "data/synthetic_queries.csv"

@@ -86,6 +86,10 @@ evals-chatbot/
 - **Data:** numpy (similarity search), pandas (CSVs), seaborn (plots)
 - **All in-memory:** No vector DB, no infrastructure
 
+## Security
+
+See [SECURITY.md](SECURITY.md) for secrets policy, prompt injection surface, and reporting guidelines.
+
 ## License
 
 MIT
