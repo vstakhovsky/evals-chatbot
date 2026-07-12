@@ -10,3 +10,5 @@ dist/
 build/
 *.egg-info/
 .venv/
+*.backup
+*.old
