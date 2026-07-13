@@ -17,8 +17,10 @@ This repo tells the story of building a minimal FAQ chatbot and progressively im
 └── **Correct routing rate** (predicted_action == expected_action)
     └── **Critical escalation recall** (critical cases routed to escalate / all critical)
 
-**Estimated avoided contacts** = daily volume × RAG-eligible share × safe resolution rate  
+**Estimated avoided contacts** = daily volume × RAG-eligible share × safe resolution rate
 *(Illustrative offline proxy, not measured savings. No DAU/NPS/CSAT claims.)*
+
+**Guardrails map:** See [docs/PRODUCT.md](docs/PRODUCT.md) for enforcement layers and verification.
 
 ## Roadmap
 

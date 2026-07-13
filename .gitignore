@@ -12,3 +12,9 @@ build/
 .venv/
 *.backup
 *.old
+
+# Cache files
+*.npy
+.smoke_test_checkpoint.json
+smoke_test_results.json
+.smoke_test_checkpoint.json

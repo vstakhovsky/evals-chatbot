@@ -15,6 +15,8 @@ This is a fintech support RAG evaluation project with validated benchmark datase
 3. **GPT-4o judges:** All LLM judges use GPT-4o for consistent calibration (cheap judges that fail = re-run everything)
 4. **Test split frozen:** Never modify test cases after first baseline run — hash is frozen in README
 5. **Incremental saves:** All long-running processes must save incrementally and support resume
+6. **Guardrail regression:** Any change to SYSTEM_PROMPT or judges.py requires running the guardrail subset before commit; paste its 3-line summary into the commit message.
+7. **Verification claims**: Verification claims must quote the EXACT check performed (command + output), not restate the requirement. Example: "✓ ACTION parse: 20/20 responses have parseable ACTION lines (ran parse_action() on smoke_test_v3_action.py output)" NOT "✓ Routing works correctly."
 
 ## Development Phases
 
@@ -28,3 +30,5 @@ This is a fintech support RAG evaluation project with validated benchmark datase
 - `data/`: Knowledge base articles and pre-computed embeddings
 - `docs/`: Decision log, specs, and validation reports
 - `*.py`: Pipeline components (dataset generation, validation, smoke test)
+
+**Stage ritual:** End of stage = run /stage-review; new product questions land in docs/decision_log.md.
