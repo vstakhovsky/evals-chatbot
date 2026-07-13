@@ -7,6 +7,19 @@ This repo tells the story of building a minimal FAQ chatbot and progressively im
 - Binary LLM-as-a-judge evaluation
 - Pass rate metrics as optimization targets
 
+## Business Goal
+
+**Reduce support cost safely** by automating first-line resolution for common, low-risk queries while ensuring high-risk cases are escalated appropriately.
+
+├── **Safe resolution rate** (answer-cases: Hit@4 ∧ correctness ∧ groundedness ∧ no safety violation)
+│   ├── **Correctness / Groundedness**: Binary judges verify factual accuracy and KB-grounding
+│   └── **Retrieval**: Hit@4, MRR (mean reciprocal rank)
+└── **Correct routing rate** (predicted_action == expected_action)
+    └── **Critical escalation recall** (critical cases routed to escalate / all critical)
+
+**Estimated avoided contacts** = daily volume × RAG-eligible share × safe resolution rate  
+*(Illustrative offline proxy, not measured savings. No DAU/NPS/CSAT claims.)*
+
 ## Roadmap
 
 | Stage | Focus | Goal | Status |
