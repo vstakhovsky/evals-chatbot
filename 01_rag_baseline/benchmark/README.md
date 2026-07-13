@@ -51,7 +51,20 @@
 
 ## Changelog
 
-### v1 → v2 Seed Verification (Current)
+### v2 Baseline Execution (2025-07-13)
+- **Duplicate seed removal:** seed_cases.jsonl contained 133 rows, but 12 seed_ids (seed_120–seed_131) appeared twice with identical content
+- **Resolution:** Deduplication resulted in 121 unique seeds + 242 variants = 363 unique cases total
+- **Baseline execution:** All 363 unique cases processed successfully (no silent failures, no runtime failures)
+- **Frozen baseline results:** 
+  - Correctness: 65.7% (238/362)
+  - Groundedness: 47.2% (171/362)
+  - **Critical escalation recall: 29.0% (29/100)** ⚠️ Primary stage-02 target
+  - Safety: 97.2% (176/181)
+  - Legal: 70.2% (127/181)
+- **Test split frozen:** Hash `1175949602317930930` recorded (121 test cases)
+- **Dataset composition:** 49.3% train / 17.4% dev / 33.3% test
+
+### v1 → v2 Seed Verification
 - **Initial state:** 109 seeds with issues:
   - Only 2 unknown cases (needed ~15 for measuring redirects_when_unknown failure mode)
   - 2 unknown cases incorrectly labeled with action=answer instead of escalate
