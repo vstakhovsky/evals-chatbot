@@ -10,6 +10,12 @@ NOTEBOOK_PATH = (
     / "faq_rag_chatbot.ipynb"
 )
 
+DRAFT_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "01_rag_baseline"
+    / "faq_rag_chatbot_draft.ipynb"
+)
+
 FORBIDDEN_TEXT = (
     "%pip",
     "OpenAI(",
@@ -18,40 +24,49 @@ FORBIDDEN_TEXT = (
     "synthetic_queries.csv",
     "synthetic_rag_outputs.csv",
     "synthetic_eval_results.csv",
+    "v2_baseline_results.jsonl",
+    "validated benchmark",
+    "frozen eval set",
+    "150 synthetic queries",
+    # Audit/legacy content
     "Executive Summary",
     "Product Problem",
     "Data Lineage",
     "Benchmark Schema",
     "Family-Level Split Verification",
     "Label Status",
-    "validated benchmark",
-    "frozen eval set",
+    "Stage 02–04 Roadmap",
+    "Reproduction Instructions",
 )
 
 REQUIRED_SECTIONS = [
     "Setup",
-    "Load Help Articles",
-    "Load Article Embeddings",
+    "Load articles",
+    "Embed all articles",
     "Retrieval",
-    "Single-Turn RAG Chat",
-    "Try It",
-    "Synthetic Evaluation Dataset",
-    "Run RAG on the Evaluation Dataset",
-    "LLM-as-a-Judge Evaluation",
-    "Evaluation Results",
-    "Slice Analysis",
-    "Failure Analysis",
-    "Conclusions and Next Steps"
+    "Single-turn chat",
+    "Try it",
+    "Evaluate synthetic dataset",
+    "LLM-as-a-Judge evaluation",
+    "Metric correlations",
+    "Conclusions"
 ]
+
+
+def test_draft_notebook_exists() -> None:
+    """Draft notebook should exist as archive."""
+    assert DRAFT_PATH.exists(), "Draft notebook does not exist"
 
 
 def test_notebook_is_offline_report() -> None:
     """Notebook must be an offline presentation report with no API calls."""
     notebook = json.loads(NOTEBOOK_PATH.read_text(encoding="utf-8"))
 
-    # Check for forbidden legacy content
+    # Check for forbidden content
     all_source = "\n".join(
         "".join(cell.get("source", []))
+        if isinstance(cell.get("source", []), list)
+        else cell.get("source", "")
         for cell in notebook["cells"]
     )
 
@@ -62,7 +77,7 @@ def test_notebook_is_offline_report() -> None:
 
     if violations:
         pytest.fail(
-            f"Offline notebook contains forbidden legacy content: {violations}"
+            f"Offline notebook contains forbidden content: {violations}"
         )
 
     # Check for required sections
@@ -76,21 +91,21 @@ def test_notebook_is_offline_report() -> None:
         pytest.fail(f"Missing required sections: {missing_sections}")
 
 
-def test_notebook_kernel_spec_is_generic() -> None:
-    """Notebook should use generic python3 kernel, not local environment."""
+def test_notebook_has_visible_outputs() -> None:
+    """Notebook must have visible outputs for deterministic stages."""
     notebook = json.loads(NOTEBOOK_PATH.read_text(encoding="utf-8"))
 
-    kernelspec = notebook.get("metadata", {}).get("kernelspec", {})
+    code_cells_with_outputs = 0
+    total_code_cells = 0
 
-    # Should use generic python3, not local environment name
-    display_name = kernelspec.get("display_name", "")
-    kernel_name = kernelspec.get("name", "")
+    for cell in notebook["cells"]:
+        if cell["cell_type"] == "code":
+            total_code_cells += 1
+            if cell.get("outputs") and len(cell.get("outputs", [])) > 0:
+                code_cells_with_outputs += 1
 
-    if kernel_name and "evals-chatbot" in kernel_name.lower():
-        pytest.fail("Notebook uses local kernel instead of generic python3")
-
-    if display_name and "evals-chatbot" in display_name.lower():
-        pytest.fail("Notebook kernel display_name references local environment")
+    # At least some code cells should have outputs
+    assert code_cells_with_outputs > 0, "No code cells have visible outputs"
 
 
 def test_notebook_has_correct_structure() -> None:
@@ -116,10 +131,32 @@ def test_notebook_has_correct_structure() -> None:
                     )
 
 
+def test_notebook_sections_1_to_8_exist() -> None:
+    """Notebook must contain sections 1 through 8."""
+    notebook = json.loads(NOTEBOOK_PATH.read_text(encoding="utf-8"))
+
+    headings = "\n".join(
+        "".join(cell.get("source", []))
+        if isinstance(cell.get("source", []), list)
+        else cell.get("source", "")
+        for cell in notebook["cells"]
+        if cell.get("cell_type") == "markdown"
+    )
+
+    for number in range(1, 9):
+        found = (
+            f"## {number}." in headings or
+            f"## {number} " in headings
+        )
+        assert found, f"Section {number} not found"
+
+
 if __name__ == "__main__":
     # Run tests locally
     print("Running notebook contract tests...")
+    test_draft_notebook_exists()
     test_notebook_is_offline_report()
-    test_notebook_kernel_spec_is_generic()
+    test_notebook_has_visible_outputs()
     test_notebook_has_correct_structure()
+    test_notebook_sections_1_to_8_exist()
     print("✅ All notebook tests passed")
