@@ -18,20 +18,30 @@ FORBIDDEN_TEXT = (
     "synthetic_queries.csv",
     "synthetic_rag_outputs.csv",
     "synthetic_eval_results.csv",
-    "v2_baseline_results.jsonl",
-    "validated benchmark",
-    "frozen eval set",
-    "150 synthetic queries",
-)
-
-REQUIRED_SECTIONS = [
     "Executive Summary",
     "Product Problem",
     "Data Lineage",
     "Benchmark Schema",
     "Family-Level Split Verification",
     "Label Status",
-    "Limitations"
+    "validated benchmark",
+    "frozen eval set",
+)
+
+REQUIRED_SECTIONS = [
+    "Setup",
+    "Load Help Articles",
+    "Load Article Embeddings",
+    "Retrieval",
+    "Single-Turn RAG Chat",
+    "Try It",
+    "Synthetic Evaluation Dataset",
+    "Run RAG on the Evaluation Dataset",
+    "LLM-as-a-Judge Evaluation",
+    "Evaluation Results",
+    "Slice Analysis",
+    "Failure Analysis",
+    "Conclusions and Next Steps"
 ]
 
 
