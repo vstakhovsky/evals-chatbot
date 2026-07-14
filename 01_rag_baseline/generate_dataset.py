@@ -79,30 +79,10 @@ MODIFIERS = [
     {"id": "confused_non_native_english", "name": "Confused non-native English", "description": "Struggling with English, uses simpler vocabulary, may repeat phrases for clarity, expresses confusion about technical terms."},
 ]
 
-V1_PROMPT = """Generate exactly one customer query for a Revolut support dialog window.
-This is not a chat transcript: the customer sends one message, and support gives one answer.
+# Import prompts from centralized registry
+from prompts import PROMPT_REGISTRY
 
-Requirements:
-- write only the customer's message, with no labels, quotes, markdown, or answer
-- make it realistic for Revolut support and suitable for a single answer
-- follow the persona's language, tone, slang, and typical typos
-- use the scenario as the main support issue
-- apply the modifier naturally
-- keep it concise: 1-3 sentences, one support request
-- do not invent real personal data, account numbers, emails, or phone numbers
-- don't mix several languages in a single message
-
-Persona:
-{persona}
-
-Scenario:
-{scenario}
-
-Modifier:
-{modifier}
-"""
-
-V1_OUTPUT_PATH = "data/synthetic_queries.csv"
+# Legacy v1 CSV output removed — use benchmark/cases.jsonl instead
 
 
 async def generate_query_v1(persona, scenario, modifier, semaphore):
@@ -112,7 +92,8 @@ async def generate_query_v1(persona, scenario, modifier, semaphore):
         scenario_text = f"{scenario['name']}: {scenario['description']}"
         modifier_text = f"{modifier['name']}: {modifier['description']}"
 
-        prompt = V1_PROMPT.format(persona=persona_text, scenario=scenario_text, modifier=modifier_text)
+        synthetic_prompt = PROMPT_REGISTRY["synthetic_generation"]["template"]
+        prompt = synthetic_prompt.format(persona=persona_text, scenario=scenario_text, modifier=modifier_text)
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",

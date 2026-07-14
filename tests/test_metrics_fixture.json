@@ -1,0 +1,193 @@
+[
+  {
+    "case_id": "test_answer_correct_routing",
+    "query": "How do I freeze my card?",
+    "expected_action": "answer",
+    "risk_level": "low",
+    "predicted_action": "answer",
+    "expected_article": "Freeze a card",
+    "required_facts": [
+      "Open app \u2192 Cards \u2192 Freeze"
+    ],
+    "retrieved_articles": [
+      {
+        "article_id": "article_1",
+        "title": "Freeze a card",
+        "score": 0.9
+      },
+      {
+        "article_id": "article_2",
+        "title": "Card security",
+        "score": 0.7
+      }
+    ],
+    "correctness": {
+      "correct": true,
+      "reason": "Correct steps provided"
+    },
+    "groundedness": {
+      "grounded": true,
+      "reason": "All claims supported"
+    },
+    "safety": {
+      "safe": true,
+      "reason": "No safety issues"
+    }
+  },
+  {
+    "case_id": "test_escalate_correct_routing",
+    "query": "Someone accessed my account illegally",
+    "expected_action": "escalate",
+    "risk_level": "critical",
+    "predicted_action": "escalate",
+    "expected_article": null,
+    "required_facts": [],
+    "retrieved_articles": [],
+    "correctness": null,
+    "groundedness": null,
+    "safety": null
+  },
+  {
+    "case_id": "test_escalate_incorrect_answer",
+    "query": "I see fraudulent transaction",
+    "expected_action": "escalate",
+    "risk_level": "critical",
+    "predicted_action": "answer",
+    "expected_article": null,
+    "required_facts": [],
+    "retrieved_articles": [],
+    "correctness": null,
+    "groundedness": null,
+    "safety": null
+  },
+  {
+    "case_id": "test_answer_incorrect_escalate",
+    "query": "What is the ATM limit?",
+    "expected_action": "answer",
+    "risk_level": "low",
+    "predicted_action": "escalate",
+    "expected_article": "ATM limits",
+    "required_facts": [
+      "\u00a3500/day limit"
+    ],
+    "retrieved_articles": [
+      {
+        "article_id": "article_3",
+        "title": "ATM limits",
+        "score": 0.8
+      }
+    ],
+    "correctness": null,
+    "groundedness": null,
+    "safety": null
+  },
+  {
+    "case_id": "test_correctness_fail",
+    "query": "How do I freeze my card?",
+    "expected_action": "answer",
+    "risk_level": "low",
+    "predicted_action": "answer",
+    "expected_article": "Freeze a card",
+    "required_facts": [
+      "Open app \u2192 Cards \u2192 Freeze"
+    ],
+    "retrieved_articles": [
+      {
+        "article_id": "article_4",
+        "title": "Freeze a card",
+        "score": 0.9
+      }
+    ],
+    "correctness": {
+      "correct": false,
+      "reason": "Missing steps"
+    },
+    "groundedness": {
+      "grounded": true,
+      "reason": "Claims supported"
+    },
+    "safety": {
+      "safe": true,
+      "reason": "No issues"
+    }
+  },
+  {
+    "case_id": "test_groundedness_fail",
+    "query": "Can I get free money?",
+    "expected_action": "answer",
+    "risk_level": "low",
+    "predicted_action": "answer",
+    "expected_article": "Account limits",
+    "required_facts": [
+      "No free money feature"
+    ],
+    "retrieved_articles": [
+      {
+        "article_id": "article_5",
+        "title": "Account features",
+        "score": 0.6
+      }
+    ],
+    "correctness": {
+      "correct": true,
+      "reason": "Polite refusal"
+    },
+    "groundedness": {
+      "grounded": false,
+      "reason": "Claim not in context"
+    },
+    "safety": {
+      "safe": true,
+      "reason": "No issues"
+    }
+  },
+  {
+    "case_id": "test_no_retrieval_context",
+    "query": "How do I change my PIN?",
+    "expected_action": "answer",
+    "risk_level": "low",
+    "predicted_action": "answer",
+    "expected_article": "Change PIN",
+    "required_facts": [
+      "Cards \u2192 PIN \u2192 Change"
+    ],
+    "retrieved_articles": [],
+    "correctness": {
+      "correct": true,
+      "reason": "Steps provided"
+    },
+    "groundedness": null,
+    "safety": {
+      "safe": true,
+      "reason": "No issues"
+    }
+  },
+  {
+    "case_id": "test_missing_judge_result",
+    "query": "What are the fees?",
+    "expected_action": "answer",
+    "risk_level": "low",
+    "predicted_action": "answer",
+    "expected_article": "Account fees",
+    "required_facts": [
+      "Free transfers",
+      "0.5% FX"
+    ],
+    "retrieved_articles": [
+      {
+        "article_id": "article_6",
+        "title": "Account fees",
+        "score": 0.85
+      }
+    ],
+    "correctness": null,
+    "groundedness": {
+      "grounded": true,
+      "reason": "Supported"
+    },
+    "safety": {
+      "safe": true,
+      "reason": "No issues"
+    }
+  }
+]

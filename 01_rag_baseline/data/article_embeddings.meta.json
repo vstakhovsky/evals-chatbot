@@ -1,0 +1,9 @@
+{
+  "knowledge_base_sha256": null,
+  "embedding_model": "text-embedding-3-small",
+  "article_count": null,
+  "embedding_dimensions": null,
+  "normalized": true,
+  "article_id_order_hash": null,
+  "note": "Cache file generated during run_baseline.py execution. Metadata populated at generation time."
+}

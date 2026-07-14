@@ -61,7 +61,9 @@ def load_dataset(path):
 
 def load_banking77_data():
     """Load or download Banking77 train queries for realism comparison."""
-    banking77_path = Path("data/reference/banking77_queries.txt")
+    # ponytail: assume script runs from 01_rag_baseline/
+    script_dir = Path(__file__).parent
+    banking77_path = script_dir / "data/reference/banking77_queries.txt"
 
     if banking77_path.exists():
         print(f"Loading cached Banking77 queries from {banking77_path}")
@@ -484,7 +486,7 @@ def load_dataset(path):
 
 def check_required_fields(data):
     """Check that all required fields are present."""
-    required = ["case_id", "seed_id", "query", "topic", "expected_action", "risk_level", "expected_article", "required_facts", "difficulty", "source", "split"]
+    required = ["case_id", "seed_id", "query", "topic", "expected_action", "risk_level", "expected_article", "required_facts", "difficulty", "source", "split", "dataset_version", "label_status"]
 
     missing = []
     for i, case in enumerate(data):
@@ -501,7 +503,8 @@ def check_enums(data):
     valid_risk_levels = {"low", "critical"}
     valid_difficulties = {"direct", "ambiguous", "noisy", "unknown"}
     valid_sources = {"human_seed", "synthetic_variant_short_mobile", "synthetic_variant_typo_noisy", "synthetic_variant_non_native", "synthetic_variant_emotional"}
-    valid_splits = {"train", "dev", "test"}
+    valid_splits = {"optimization", "development", "holdout_candidate"}
+    valid_label_statuses = {"unreviewed", "needs_review", "human_validated"}
 
     invalid = []
     for i, case in enumerate(data):
@@ -519,6 +522,9 @@ def check_enums(data):
 
         if case.get("split") not in valid_splits:
             invalid.append(f"Row {i}: invalid split '{case.get('split')}'")
+
+        if case.get("label_status") not in valid_label_statuses:
+            invalid.append(f"Row {i}: invalid label_status '{case.get('label_status')}'")
 
     return invalid
 
@@ -568,7 +574,9 @@ def check_near_duplicates(data):
 
     try:
         # Load articles for context
-        kb_path = "data/revolut_help_articles.jsonl"
+        # ponytail: assume script runs from 01_rag_baseline/
+        script_dir = Path(__file__).parent
+        kb_path = script_dir / "data/reference/revolut_help_articles.jsonl"
         articles = []
         with open(kb_path, "r", encoding="utf-8") as f:
             for line in f:
@@ -600,18 +608,25 @@ def check_near_duplicates(data):
 def print_summary(data, issues):
     """Print validation summary."""
     print("=" * 80)
-    print("DATASET VALIDATION REPORT")
+    print("DATASET STRUCTURAL CONTRACT VALIDATION")
     print("=" * 80)
 
-    print(f"\nTotal cases: {len(data)}")
+    print(f"\nTotal rows: {len(data)}")
 
     # Count issues
     total_issues = sum(len(issue_list) for issue_list in issues.values())
     valid_cases = len(data) - total_issues
 
-    print(f"\nValid cases: {valid_cases}")
-    print(f"Invalid cases: {total_issues}")
-    print(f"Validity rate: {valid_cases / len(data) * 100:.1f}%")
+    print(f"Valid rows: {valid_cases}/{len(data)}")
+
+    # Count human-validated labels
+    human_validated = sum(1 for case in data if case.get('label_status') == 'human_validated')
+    print(f"Human-validated labels: {human_validated}/{len(data)}")
+
+    if total_issues == 0:
+        print("\n✅ Dataset structural contract: PASS")
+    else:
+        print(f"\n❌ Dataset structural contract: FAIL ({total_issues} issues)")
 
     # Show issues by category
     for category, issue_list in issues.items():
@@ -627,10 +642,10 @@ def print_summary(data, issues):
     print("\n" + "=" * 80)
 
     if total_issues == 0:
-        print("✅ DATASET VALIDATION PASSED")
+        print("✅ Dataset structural validation: PASSED")
         return 0
     else:
-        print(f"❌ DATASET VALIDATION FAILED: {total_issues} issues found")
+        print(f"❌ Dataset structural validation: FAILED ({total_issues} issues)")
         return 1
 
 
@@ -638,23 +653,6 @@ def create_spot_check_sample(data, n=10):
     """Create spot-check sample: all critical + all invalid + flagged duplicates + random 10%."""
     # Get all critical cases
     critical = [c for c in data if c.get("risk_level") == "critical"]
-
-    # Get invalid cases (if any)
-    all_issues = []
-    for issue_list in issues.values():
-        all_issues.extend(issue_list)
-
-    # Parse invalid rows from issue messages
-    invalid_rows = set()
-    for issue in all_issues:
-        if "Row " in issue:
-            try:
-                row_num = int(issue.split("Row ")[1].split(":")[0])
-                invalid_rows.add(row_num)
-            except:
-                pass
-
-    invalid_cases = [data[i] for i in sorted(invalid_rows) if i < len(data)]
 
     # Random 10%
     import random
@@ -664,7 +662,7 @@ def create_spot_check_sample(data, n=10):
     # Combine and deduplicate
     spot_check = []
     seen = set()
-    for case in critical + invalid_cases + random_sample:
+    for case in critical + random_sample:
         case_id = case.get("case_id")
         if case_id not in seen:
             spot_check.append(case)
@@ -674,26 +672,33 @@ def create_spot_check_sample(data, n=10):
 
 
 def main():
+    import argparse
+    from pathlib import Path
+
     parser = argparse.ArgumentParser(description="Validate v2 benchmark dataset")
-    parser.add_argument("dataset_path", help="Path to dataset JSONL file", nargs='?')
+
+    # Derive default path relative to this script
+    STAGE_DIR = Path(__file__).resolve().parent
+    DEFAULT_DATASET = STAGE_DIR / "benchmark" / "cases.jsonl"
+
+    parser.add_argument("dataset_path", help="Path to dataset JSONL file", nargs="?", default=str(DEFAULT_DATASET))
     parser.add_argument("--realism", action="store_true", help="Run realism validation comparing to Banking77")
     args = parser.parse_args()
 
+    # Convert string back to Path if using default
+    dataset_path = Path(args.dataset_path) if args.dataset_path else DEFAULT_DATASET
+
     # Realism mode
     if args.realism:
-        if not args.dataset_path:
-            print("Error: --realism requires dataset_path argument")
+        if not args.dataset_path or not Path(args.dataset_path).exists():
+            print("Error: --realism requires valid dataset_path argument")
             sys.exit(1)
         exit_code = run_realism_validation(args.dataset_path)
         sys.exit(exit_code)
 
     # Normal validation mode
-    if not args.dataset_path:
-        parser.print_help()
-        sys.exit(1)
-
-    print(f"Loading dataset from {args.dataset_path}...")
-    data = load_dataset(args.dataset_path)
+    print(f"Loading dataset from {dataset_path}...")
+    data = load_dataset(dataset_path)
     print(f"Loaded {len(data)} cases")
 
     # Run all checks
@@ -719,18 +724,6 @@ def main():
 
     # Print summary and exit
     exit_code = print_summary(data, issues)
-
-    # Create spot-check sample if validation passed
-    if exit_code == 0:
-        print("\nCreating spot-check sample...")
-        sample = create_spot_check_sample(data, n=10)
-
-        sample_path = args.dataset_path.replace(".jsonl", "_spot_check.jsonl")
-        with open(sample_path, "w", encoding="utf-8") as f:
-            for case in sample:
-                f.write(json.dumps(case, ensure_ascii=False) + "\n")
-
-        print(f"Spot-check sample saved to {sample_path}")
 
     sys.exit(exit_code)
 

@@ -1,25 +1,26 @@
 # Fintech Support Benchmark — v2
 
-**Purpose:** Validated internal benchmark for measuring RAG chatbot performance on fintech support queries with safe resolution and critical routing metrics.
+**Purpose:** Internal benchmark for measuring RAG chatbot performance on fintech support queries with safe resolution and critical routing metrics.
 
 **Scope:**
 - Single-turn support Q&A
 - Knowledge-base-only (no account data, no transaction history, no user-specific context)
-- No production claims (offline evaluation only)
+- Offline evaluation only (no production claims)
 - No multi-turn conversations
 
 **Composition:**
-- **Seeds**: 100-120 human-designed seed cases
-- **Variants**: 2-4 controlled variants per seed (350-450 total cases)
-- **Splits**: ~50% train / 20% dev / 30% test (grouped by seed_id)
-- **Coverage**: Mix of frequent low-risk (~55%), critical fraud/security (~25%), unknown/out-of-scope (~15%), and edge cases (~5%)
+- **Seeds:** 121 human-designed seed cases
+- **Variants:** 2-4 controlled variants per seed (234 total variants)
+- **Total:** 355 cases
+- **Splits:** 175 optimization (49.3%) / 61 development (17.2%) / 119 holdout_candidate (33.5%)
+- **Coverage:** Mix of low-risk, critical fraud/security, unknown/out-of-scope, and edge cases
 
 **Primary Metrics:**
 - **Safe resolution rate** (answer-cases): Hit@4 ∧ correctness ∧ groundedness ∧ no safety violation
 - **Correct routing rate**: predicted_action == expected_action
 - **Critical escalation recall**: critical cases routed to escalate / all critical
 
-**Secondary Metrics (from v1 baseline):**
+**Secondary Metrics:**
 - Relevancy, conciseness, helpfulness, legal compliance, redirects when unknown
 
 **Retrieval Metrics:**
@@ -27,58 +28,50 @@
 - MRR (mean reciprocal rank)
 
 **Limitations:**
-- Synthetic-heavy (only ~100 human-designed seeds, rest are controlled variants)
+- **All labels are provisional** (`needs_review`, not human-validated)
+- **Split is not frozen** (holdout_candidate is provisional)
+- **No canonical baseline run exists** (legacy 363-case run incompatible)
+- Synthetic-heavy (only 121 human-designed seeds, rest are controlled variants)
 - No production distribution measurement
 - No account data access (KB-only queries)
 - Single-turn only (no conversation history)
-- Judges are LLM-based (~80% accuracy on manual spot-check)
+- Judges are not calibrated
 
 **Usage:**
-1. Verify seeds: `python verify_seeds.py` (checks articles, facts, labels)
-2. Generate variants: `python generate_dataset.py --v2`
-3. Validate dataset: `python validate_dataset.py v2_cases.jsonl`
-4. Check guardrails: `python guardrails_check.py --pre-baseline`
-5. Run benchmark through notebook
-6. Regression testing via regression_cases.jsonl
-7. Internal model selection; Arena/MTEB shortlist external leaderboards
+1. Generate dataset: `python generate_dataset.py --v2`
+2. Validate dataset: `python validate_dataset.py benchmark/cases.jsonl`
+3. Run baseline: `python run_baseline.py`
+4. View results in `results/canonical/`
 
-**Guardrails:**
-- test_split_hash: 1175949602317930930 (frozen for stage 02+)
-- All critical → escalate ✅
-- All unknown → escalate ✅
-- No split leakage ✅
-- Splits stratified by (risk_level, difficulty) ✅
+**Dataset Contract:**
+- All cases have `case_id`, `seed_id`, `query`, `expected_action`, `risk_level`, `expected_article`, `required_facts`
+- All critical cases have `expected_action == escalate`
+- All variants of a `seed_id` are in the same split (no split leakage)
+- Article IDs reference existing knowledge base articles
+- Hash computed from sorted case IDs for reproducibility
+
+**Current Status:**
+- ⚠️ **Provisional labels** — All 355 cases are `needs_review` (not human-validated)
+- ⚠️ **Provisional split** — Holdout not frozen; may adjust before stage 02
+- ⚠️ **No canonical run** — Must execute baseline before reporting metrics
+- ❌ **Legacy metrics invalidated** — 363-case run incompatible with current 355-case benchmark
 
 ## Changelog
 
-### v2 Baseline Execution (2025-07-13)
-- **Duplicate seed removal:** seed_cases.jsonl contained 133 rows, but 12 seed_ids (seed_120–seed_131) appeared twice with identical content
-- **Resolution:** Deduplication resulted in 121 unique seeds + 242 variants = 363 unique cases total
-- **Baseline execution:** All 363 unique cases processed successfully (no silent failures, no runtime failures)
-- **Frozen baseline results:** 
-  - Correctness: 65.7% (238/362)
-  - Groundedness: 47.2% (171/362)
-  - **Critical escalation recall: 29.0% (29/100)** ⚠️ Primary stage-02 target
-  - Safety: 97.2% (176/181)
-  - Legal: 70.2% (127/181)
-- **Test split frozen:** Hash `1175949602317930930` recorded (121 test cases)
-- **Dataset composition:** 49.3% train / 17.4% dev / 33.3% test
+### v2 Dataset Generation (2026-07-13)
+- **Current dataset:** 355 cases (121 unique seeds + 234 variants)
+- **Split distribution:** 175 optimization / 61 development / 119 holdout_candidate
+- **Label status:** All cases marked `needs_review` (provisional, not validated)
+- **No baseline executed** — Canonical run required for metric reporting
 
-### v1 → v2 Seed Verification
-- **Initial state:** 109 seeds with issues:
-  - Only 2 unknown cases (needed ~15 for measuring redirects_when_unknown failure mode)
-  - 2 unknown cases incorrectly labeled with action=answer instead of escalate
-  - 6 seeds with oversimplified required_facts that passed verification but lost substantive content
+### v1 → v2 Migration
+- **Removed:** Legacy CSV formats (`synthetic_queries.csv`, `synthetic_rag_outputs.csv`, `synthetic_eval_results.csv`)
+- **Consolidated:** Single benchmark file (`benchmark/cases.jsonl`)
+- **Updated:** Metric implementations with proper applicability-aware denominators
+- **Simplified:** Removed smoke test scripts; consolidated validation into single validator
 
-- **Fixes applied:**
-  - Added 12 new genuinely unknown seeds (crypto tax, joint accounts, inheritance, business features, PoA, region-specific)
-  - Fixed label math: all 26 unknown cases now have expected_action=escalate
-  - Restored substantive required_facts for 6 seeds matching actual article content
+## Dataset Version History
 
-- **Final state:** 133 seeds (100% verified)
-  - 89 low-risk answer | 44 escalate (26 critical + 18 unknown)
-  - 77 direct | 17 ambiguous | 13 noisy | 26 unknown
-  - All critical → escalate ✅
-  - All unknown → escalate ✅
-  - No missing articles ✅
-  - No missing facts ✅
+**v2_2026_07_14** (current): Updated dataset version to reflect actual creation date. The previous version v2_2025-07_13 contained an incorrect year - this benchmark was created in July 2026, not July 2025. All 355 cases updated to v2_2026_07_14.
+
+**v2_2025_07_13**: Initial v2 canonical benchmark with 355 cases and 121 independent families. Structural validation and family split verification.
