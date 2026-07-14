@@ -6,7 +6,7 @@
 
 ## Project Context
 
-This is a fintech support RAG evaluation project with validated benchmark datasets and judge-based quality metrics.
+This is a fintech support RAG evaluation project with provisional benchmark datasets and judge-based quality metrics.
 
 ## Key Constraints
 
