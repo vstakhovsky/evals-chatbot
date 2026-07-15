@@ -23,6 +23,7 @@ build/
 *.old
 *.log
 *_checkpoint.json
+*_draft.ipynb
 
 # Cache files
 *.npy

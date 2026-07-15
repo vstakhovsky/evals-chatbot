@@ -180,6 +180,7 @@ def test_runner_judge_consistency():
 
 def test_notebook_shows_atomic_judge_ids():
     """Notebook should show atomic judge IDs, not legacy bundled names."""
+    import re
     notebook_path = Path("01_rag_baseline/faq_rag_chatbot.ipynb")
 
     with open(notebook_path, 'r') as f:
@@ -189,11 +190,19 @@ def test_notebook_shows_atomic_judge_ids():
     all_text = ""
     for cell in nb['cells']:
         if cell['cell_type'] in ['markdown', 'code']:
-            all_text += ''.join(cell.get('source', []))
+            source = cell.get('source', [])
+            if isinstance(source, list):
+                all_text += ''.join(source)
+            else:
+                all_text += source
 
-    # Check for atomic judge IDs
+    # Check for atomic judge IDs using substring matching
     atomic_judges = {'correctness', 'groundedness', 'actionability', 'conciseness', 'targeted_safety'}
-    found_atomic = atomic_judges & set(all_text.lower().split())
+    found_atomic = {
+        judge_id
+        for judge_id in atomic_judges
+        if judge_id in all_text.lower()
+    }
 
     assert len(found_atomic) >= 3, f"Notebook should show atomic judges, found: {found_atomic}"
 
@@ -228,7 +237,7 @@ if __name__ == "__main__":
     test_infrastructure_error_produces_null_passed()
     test_non_applicable_judge_produces_null_passed()
     test_judge_result_serialization_preserves_null()
-    test_runner_uses_active_judge_registry()
+    test_runner_judge_consistency()
     test_notebook_shows_atomic_judge_ids()
     test_judges_py_exists_and_importable()
 

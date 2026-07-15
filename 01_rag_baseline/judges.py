@@ -13,20 +13,31 @@ import hashlib
 
 load_dotenv()
 
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY"),
-    base_url=os.getenv("BASE_URL"),
-)
+def _create_openai_client():
+    """Create OpenAI client only when needed."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "OPENAI_API_KEY is required only when executing an LLM judge"
+        )
+
+    kwargs = {"api_key": api_key}
+    base_url = os.getenv("BASE_URL")
+    if base_url:
+        kwargs["base_url"] = base_url
+
+    return OpenAI(**kwargs)
 
 def prompt_sha256(text: str) -> str:
     """Calculate SHA-256 hash of prompt text."""
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-async def _generate_judge_output(prompt, schema_title, schema_description):
+async def _generate_judge_output(prompt, schema_title, schema_description, client=None):
     """Generic LLM judge call with structured output."""
     try:
-        response = client.chat.completions.create(
+        active_client = client or _create_openai_client()
+        response = active_client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
             response_format={
