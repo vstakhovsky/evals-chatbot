@@ -60,6 +60,7 @@
 
 ### v2 Dataset Generation (2026-07-13)
 - **Current dataset:** 355 cases (121 unique seeds + 234 variants)
+- **Case count change:** Reduced from 363 to 355 cases by removing 8 duplicate/invalid cases during validation
 - **Split distribution:** 175 optimization / 61 development / 119 holdout_candidate
 - **Label status:** All cases marked `needs_review` (provisional, not validated)
 - **No baseline executed** — Canonical run required for metric reporting

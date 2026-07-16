@@ -35,13 +35,32 @@ try:
     from dotenv import load_dotenv
     from openai import OpenAI
     load_dotenv()
-    client = OpenAI(
-        api_key=os.getenv("OPENAI_API_KEY"),
-        base_url=os.getenv("BASE_URL"),
-    )
     HAS_OPENAI = True
+    client = None  # Lazy initialization
 except ImportError:
     HAS_OPENAI = False
+    client = None
+
+
+def _get_openai_client():
+    """Lazy OpenAI client creation only when needed for retrieval checks."""
+    global client
+    if client is not None:
+        return client
+    if not HAS_OPENAI:
+        return None
+
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return None
+
+    kwargs = {"api_key": api_key}
+    base_url = os.getenv("BASE_URL")
+    if base_url:
+        kwargs["base_url"] = base_url
+
+    client = OpenAI(**kwargs)
+    return client
 
 
 def load_dataset(path):
